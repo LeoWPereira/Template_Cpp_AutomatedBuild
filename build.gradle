@@ -1,0 +1,162 @@
+apply plugin: 'c'
+apply plugin: 'maven-publish'
+
+group = 'com.agres.isopad'
+version = '0.0.1'
+
+model 
+{
+	buildTypes 
+	{
+        UnitTestHarness
+        Release
+    }
+    
+	platforms 
+	{
+		"stm32f7xx-arm" 
+		{
+            architecture "arm"
+        }		
+	}
+    
+    toolChains 
+    {
+		gcc(Gcc) 
+		{
+	  		target('stm32f7xx-arm') 
+	  		{
+				def prefix = ""
+				
+				cCompiler.executable         = prefix + cCompiler.executable
+				cppCompiler.executable       = prefix + cppCompiler.executable
+				assembler.executable         = prefix + assembler.executable
+				linker.executable            = prefix + linker.executable
+				staticLibArchiver.executable = prefix + staticLibArchiver.executable
+    		}
+		}
+	}
+	
+    components 
+    {
+//        teste(NativeLibrarySpec) {
+//			targetPlatform "arm"
+//		}
+
+		all 
+		{
+            binaries.withType(SharedLibraryBinarySpec) 
+            {
+                buildable = false
+            }
+			
+			sources 
+			{
+				c 
+				{
+					source 
+					{
+						srcDir "src"
+						include "**/*.c"
+					}
+					
+					exportedHeaders 
+					{
+						srcDir "src"
+					}
+				}
+			}
+        }
+    }
+}
+
+														/////////////
+														/// TASKS ///
+														/////////////
+
+task ("Clean Terminal", type: Exec) {
+	commandLine 'clear'
+	
+	doLast 
+	{
+        println '\t\t\t\t\t\t\t\t\t******************** IsoPad **********************'
+    }
+}
+
+task ("Clean Host Project", dependsOn: "Clean Terminal", type: Exec) {
+	workingDir 'UnitTestHarness'
+
+  	commandLine 'make', 'clean'
+}
+
+task ("Build Project For Host", dependsOn: "Clean Host Project", type: Exec) {
+	workingDir 'UnitTestHarness'
+
+  	commandLine 'make'
+}
+
+task ("Perform Unit Test Harness On Host", dependsOn: "Build Project For Host", type: Exec) { 
+	workingDir 'UnitTestHarness'
+
+  	commandLine './TemplateGoogleTestAutomatedBuild'
+}
+
+task ("Clean Target Project", dependsOn: "Perform Unit Test Harness On Host", type: Exec) { 
+	workingDir 'Release'
+
+  	commandLine 'make', 'clean'
+}
+
+task ("Build Project For Target", dependsOn: "Clean Target Project", type: Exec) { 
+	workingDir 'Release'
+
+  	commandLine 'make'
+}
+
+task ("Generate Documentation", dependsOn: "Build Project For Target", type: Exec) { 
+	commandLine 'doxygen'
+}
+
+task ("Remove Possible Symbolic Link", dependsOn: "Generate Documentation", type: Exec) { 
+	workingDir 'Documentation/Doxygen'
+	
+	commandLine 'rm', 'index.html'
+}
+
+task ("Create Symbolic Link", dependsOn: "Remove Possible Symbolic Link", type: Exec) { 
+	workingDir 'Documentation/Doxygen'
+	
+	commandLine 'ln', '-s', 'html/index.html', 'index.html'
+}
+
+task AutomatedBuild(dependsOn: "Create Symbolic Link", type: Zip) {
+	destinationDir = file('Out')
+	
+	baseName = 'TESTE'
+	version = project.version
+	extension = 'zip'
+
+	into('UnitTestHarness') {
+	    from fileTree(dir: 'UnitTestHarness/', 	include: '*.elf')
+	    from fileTree(dir: 'UnitTestHarness/', 	include: '*.hex')
+	    from fileTree(dir: 'UnitTestHarness/', 	include: '*.bin')
+	    from fileTree(dir: 'UnitTestHarness/', 	include: '*.a')
+	    from fileTree(dir: 'UnitTestHarness/', 	include: '*.so')
+	}
+	
+	into('Release') { 
+		from fileTree(dir: 'Release/', 	include: '*.elf')
+	    from fileTree(dir: 'Release/', 	include: '*.hex')
+	    from fileTree(dir: 'Release/', 	include: '*.bin')
+	    from fileTree(dir: 'Release/', 	include: '*.a')
+	    from fileTree(dir: 'Release/', 	include: '*.so')
+	}
+	
+	into('Documentation') { 
+		into('html') {
+			from fileTree(dir: 'Documentation/Doxygen/html', 	include: '*.*')
+		}
+		
+		from fileTree(dir: 'Documentation/Doxygen', 		include: 'index.html')
+	}
+}
