@@ -11,7 +11,8 @@
 #include <stdint.h>
 
 /**
- * @typedef To document A type definition
+ * @typedef integer
+ * @brief	To document A type definition
  */
 typedef uint32_t integer;
 

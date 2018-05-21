@@ -3,7 +3,7 @@ var NAVTREEINDEX0 =
 "_foo_8cpp.html":[1,0,0,0],
 "_foo_8hpp.html":[1,0,0,1],
 "_foo_8hpp.html#a74bbca0b51342a095149dd247d12c91e":[1,0,0,1,2],
-"_foo_8hpp.html#aa99b72987dca5e6532979f0852e6f033":[1,0,0,1,3],
+"_foo_8hpp.html#aaac9dd73a99d12718fde0992b66a09c8":[1,0,0,1,3],
 "_foo_8hpp_source.html":[1,0,0,1],
 "_template_google_test_automated_build_8cpp.html":[1,0,0,2],
 "_template_google_test_automated_build_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4":[1,0,0,2,0],
